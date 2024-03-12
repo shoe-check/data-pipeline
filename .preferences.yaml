@@ -1,0 +1,14 @@
+sync_config:
+  auth_type: null
+  branch: main
+  email: null
+  enable_git_integration: null
+  remote_repo_link: git@github.com:shoe-check/data-pipeline.git
+  repo_path: /home/src/data-lab
+  ssh_private_key_secret_name: mage_git_ssh_private_key_b64
+  ssh_public_key_secret_name: mage_git_ssh_public_key_b64
+  sync_on_pipeline_run: false
+  sync_on_start: false
+  sync_submodules: true
+  type: null
+  username: null
