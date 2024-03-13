@@ -22,7 +22,7 @@ def load_data_from_api(*args, **kwargs):
     options.add_argument('--disable-dev-shm-usage')
     driver = webdriver.Chrome(service=service, options=options)
 
-    driver.get("https://www.browserstack.com/")
+    driver.get("https://www.reddit.com/r/Repsneakers/")
     element = driver.find_element(By.NAME, "query")
     
     driver.quit()
