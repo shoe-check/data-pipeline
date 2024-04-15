@@ -26,33 +26,25 @@ user_agents = [
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15',
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15',
 ]
-image_elements = []
 
 def scroll_webpage_until_end(driver):
     # Get initial scroll height
     last_height = driver.execute_script("return document.body.scrollHeight")
-    img_elements = []
-    print("Scrolling...")
+
     while True:
         # Scroll down to bottom
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
         # Wait for some time to load content
-        time.sleep(random.randrange(10, 20))
+        time.sleep(15)
 
         # Calculate new scroll height and compare with last scroll height
         new_height = driver.execute_script("return document.body.scrollHeight")
-
-        img_elements = driver.find_elements(By.CSS_SELECTOR, ".GridCellLink__Link-sc-2zm517-0")
-        print(len(img_elements))
-        
-        
+        print("Scrolling")
         if new_height == last_height:
             # If heights are the same, it means end of page
             return
         last_height = new_height
-    print("Scroll Completed")
-    return img_elements
 
 def set_viewport_size(driver, width, height):
     window_size = driver.execute_script("""
@@ -103,7 +95,7 @@ def load_data_from_api(*args, **kwargs):
         options.add_argument(f'user-agent={user_agent}')
         
         
-        url = 'https://www.goat.com/brand/air-jordan?web_groups=sneakers'
+        url = 'https://snkrdunk.com/en/brands/nike?slide=right'
         stealth(driver,
                 languages=["en-US", "en"],
                 vendor="Google Inc.",
@@ -122,28 +114,22 @@ def load_data_from_api(*args, **kwargs):
         # # Wait for the page to load (adjust sleep time as needed)
         
 
-        image_elements = scroll_webpage_until_end(driver)
+        scroll_webpage_until_end(driver)
 
         
-        # image_elements = 
+        image_elements = driver.find_elements(By.CSS_SELECTOR, "#content > main > div:nth-child(2) > div.market__content.bg-white > section > ul > li > a")
         url_array= map(lambda x: x.get_attribute("href"), image_elements)
         
-    except Exception as e:
+    except:
 
-        image_elements = driver.find_elements(By.CSS_SELECTOR, ".GridCellLink__Link-sc-2zm517-0")
+        image_elements = driver.find_elements(By.CSS_SELECTOR, "#content > main > div:nth-child(2) > div.market__content.bg-white > section > ul > li > a")
         url_array= map(lambda x: x.get_attribute("href"), image_elements)
-        print("Error",e)
-        
-        # Create DataFrame
-        data = {'Name': url_array}
-        df = pd.DataFrame(data)
-        return df
         
     finally:
         driver.quit()
     
     
-
+    
 
 
     # Create DataFrame
