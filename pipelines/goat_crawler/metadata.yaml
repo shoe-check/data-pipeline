@@ -3,19 +3,21 @@ blocks:
   color: null
   configuration: {}
   downstream_blocks:
-  - detail_scraper
+  - utl_list_split_1
+  - url_list_split_2
+  - url_list_split_3
   executor_config: null
   executor_type: local_python
   has_callback: false
   language: python
   name: scrape_url_list
   retry_config: null
-  status: executed
+  status: updated
   timeout: null
   type: data_loader
   upstream_blocks: []
   uuid: scrape_url_list
-- all_upstream_blocks_executed: true
+- all_upstream_blocks_executed: false
   color: null
   configuration: {}
   downstream_blocks:
@@ -24,14 +26,50 @@ blocks:
   executor_type: local_python
   has_callback: false
   language: python
-  name: detail_scraper
+  name: detail_scraper_2
   retry_config: null
   status: updated
   timeout: null
   type: data_loader
   upstream_blocks:
-  - scrape_url_list
-  uuid: detail_scraper
+  - url_list_split_2
+  uuid: detail_scraper_2
+- all_upstream_blocks_executed: false
+  color: null
+  configuration: {}
+  downstream_blocks:
+  - goat_sneaker_list_csv
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: detail_scraper_3
+  replicated_block: detail_scraper_2
+  retry_config: null
+  status: not_executed
+  timeout: null
+  type: data_loader
+  upstream_blocks:
+  - url_list_split_3
+  uuid: detail_scraper_3
+- all_upstream_blocks_executed: false
+  color: null
+  configuration: {}
+  downstream_blocks:
+  - goat_sneaker_list_csv
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: detail_scraper_1
+  replicated_block: detail_scraper_2
+  retry_config: null
+  status: not_executed
+  timeout: null
+  type: data_loader
+  upstream_blocks:
+  - utl_list_split_1
+  uuid: detail_scraper_1
 - all_upstream_blocks_executed: false
   color: null
   configuration: {}
@@ -42,12 +80,65 @@ blocks:
   language: python
   name: goat_sneaker_list_csv
   retry_config: null
-  status: not_executed
+  status: updated
   timeout: null
   type: data_exporter
   upstream_blocks:
-  - detail_scraper
+  - detail_scraper_2
+  - detail_scraper_1
+  - detail_scraper_3
   uuid: goat_sneaker_list_csv
+- all_upstream_blocks_executed: false
+  color: null
+  configuration: {}
+  downstream_blocks:
+  - detail_scraper_1
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: utl_list_split_1
+  retry_config: null
+  status: updated
+  timeout: null
+  type: transformer
+  upstream_blocks:
+  - scrape_url_list
+  uuid: utl_list_split_1
+- all_upstream_blocks_executed: false
+  color: null
+  configuration: {}
+  downstream_blocks:
+  - detail_scraper_2
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: url_list_split_2
+  retry_config: null
+  status: updated
+  timeout: null
+  type: transformer
+  upstream_blocks:
+  - scrape_url_list
+  uuid: url_list_split_2
+- all_upstream_blocks_executed: false
+  color: null
+  configuration: {}
+  downstream_blocks:
+  - detail_scraper_3
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: url_list_split_3
+  retry_config: null
+  status: updated
+  timeout: null
+  type: transformer
+  upstream_blocks:
+  - scrape_url_list
+  uuid: url_list_split_3
 cache_block_output_in_memory: false
 callbacks: []
 concurrency_config: {}
@@ -69,7 +160,10 @@ settings:
 spark_config: {}
 tags: []
 type: python
-updated_at: '2024-04-15 07:20:10'
+updated_at: '2024-04-20 07:55:38'
 uuid: goat_crawler
+variables:
+  s3AccessKey: qnVqBZtdVrJ9s9sNWe0F
+  s3SecretKey: XmAqcjG1US7L2eIPFlnDHAlyXM8n0UKBed4hSC3A
 variables_dir: /home/src/mage_data/data-lab
 widgets: []

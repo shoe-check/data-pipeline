@@ -8,8 +8,13 @@ from io import BytesIO
 from PIL import Image
 import pandas as pd
 import random
+import zlib
 import requests
 from minio import Minio
+from datetime import date
+import boto3
+from botocore.client import Config
+
 
 if 'data_loader' not in globals():
     from mage_ai.data_preparation.decorators import data_loader
@@ -35,8 +40,11 @@ def set_viewport_size(driver, width, height):
     driver.set_window_size(*window_size)
 
 @data_loader
-def load_data(data_from_scraper_url_list):
+def load_data(data_from_scraper_url_list,**kwargs):
     url_array = []
+    date_stamp= date.today().isoformat()
+    brand_name = kwargs['GOAT_BRAND_NAME']
+
     service = Service(executable_path=f"{os.getcwd()}/data-lab/chromedriver-linux64/chromedriver")
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
@@ -46,16 +54,28 @@ def load_data(data_from_scraper_url_list):
     options.add_argument('--start-maximized')
     driver = webdriver.Chrome(service=service, options=options)
     
-
-    mock_data = {'Name': ["https://www.goat.com/sneakers/air-jordan-4-retro-black-canvas-dh7138-006"]}
-    # df = pd.DataFrame(mock_data)
-    print(data_from_scraper_url_list)
+    # Compressing Meta Urls
 
     df = data_from_scraper_url_list
-    price_dataframe = pd.DataFrame()
 
+    df_bytes = df.to_csv(index=False).encode()
+    compressed_data = zlib.compress(df_bytes,level=6)
+    # print(csv_buffer.getvalue())
+    
+    
+
+    s3 = boto3.client('s3', endpoint_url="http://10.10.0.50:6000", aws_access_key_id=kwargs['s3AccessKey'],
+                  aws_secret_access_key=kwargs['s3SecretKey'])
+    
+    s3.upload_fileobj(BytesIO(compressed_data), "sst-data-crawler", f"raw/text/listing/goat/brand/{brand_name}/{date_stamp}/meta_urls.gz")
+    print("File meta Uploaded")
+
+    df_list = []
+    
     for index, row in df.iterrows():
-        time.sleep(random.randrange(5,10))
+        print(f"Processing {index+1} of {len(df)}")
+        
+        time.sleep(random.randrange(2,5))
         try:
         
             # set the view port to use mobile iPad Air 2 View
@@ -70,7 +90,7 @@ def load_data(data_from_scraper_url_list):
             options.add_argument(f'user-agent={user_agent}')
             
             
-            url = row['Name']
+            url = row['URLS']
             stealth(driver,
                     languages=["en-US", "en"],
                     vendor="Google Inc.",
@@ -81,9 +101,6 @@ def load_data(data_from_scraper_url_list):
                     )
             driver.get(url)
 
-            time.sleep(5)
-
-
 
             price_list = driver.find_elements(By.CSS_SELECTOR,'[data-swiper-slide-index]')
             price_list = list(map(lambda x: x.get_attribute("innerText"), price_list))
@@ -93,16 +110,23 @@ def load_data(data_from_scraper_url_list):
             arr_product_title_year = product_title_year.get_attribute("innerText").split("\n")
             product_year,product_name,tags = arr_product_title_year[0],arr_product_title_year[1],arr_product_title_year[2:]
             # print(year,name,tags)
+            product_row = {}
+            try:
 
-            product_facts_text = driver.find_element(By.CSS_SELECTOR,".FactsWindow__Wrapper-sc-1hjbbqw-1 > .WindowItemLongText__Wrapper-sc-1mxjefz-0")
-            product_facts_text = product_facts_text.get_attribute("innerText")
-            # print(product_facts_text.get_attribute("innerText"))
+                product_facts_text = driver.find_element(By.CSS_SELECTOR,".FactsWindow__Wrapper-sc-1hjbbqw-1 > .WindowItemLongText__Wrapper-sc-1mxjefz-0")
+                product_facts_text = product_facts_text.get_attribute("innerText")
+                product_row["facts"] = product_facts_text
+            except Exception as productfact_err:
+                # print("Error Product Facts",url)
+                # print("Error Product Facts",productfact_err)
+                product_row["facts"] = product_name
+            
 
             product_features = driver.find_elements(By.CSS_SELECTOR,".FactsWindow__Wrapper-sc-1hjbbqw-1 > div:nth-child(n+4):nth-last-child(n+3)")
             product_features = list(map(lambda x: x.get_attribute("innerText"), product_features))
-            # print(product_features)
+            
 
-            product_row = {}
+            
             for feature in product_features:
                 feature_kv = feature.split("\n")
                 key = str(feature_kv[0]).lower().replace(' ','_')
@@ -111,7 +135,6 @@ def load_data(data_from_scraper_url_list):
 
             product_row["name"] = product_name
             product_row["tags"] = str(",").join(tags)
-            product_row["facts"] = product_facts_text
             product_row["year"] = product_year
 
 
@@ -125,22 +148,26 @@ def load_data(data_from_scraper_url_list):
                 product_item["size"] = size
                 product_item["price"] = price
                 product_item.update(product_row)
-
+                
                 price_product_item_list.append(product_item)
+            price_dataframe = pd.DataFrame(price_product_item_list)
+            df_list.append(price_dataframe)
 
-            price_dataframe.append(price_product_item_list,ignore_index=True)
-            # price_dataframe = pd.DataFrame(price_product_item_list)
             
             # return price_dataframe   
             
         except Exception as e:
-            print("Error",e)
-            
+            print("ErrorURL",url)
+            print("DETAIL_SCRAPER",e)
+
         finally:
             pass
             
         
-    driver.quit()   
+    driver.quit()
+
+    result = pd.concat(df_list,ignore_index=True)
         
-    return price_dataframe
+    return result
+    
 

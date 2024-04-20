@@ -35,7 +35,7 @@ settings:
 spark_config: {}
 tags: []
 type: python
-updated_at: '2024-04-14 13:23:02'
+updated_at: '2024-04-15 08:41:40'
 uuid: reddit_crawler
 variables:
   s3AccessKey: qnVqBZtdVrJ9s9sNWe0F

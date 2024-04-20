@@ -32,20 +32,21 @@ def scroll_webpage_until_end(driver):
     # Get initial scroll height
     last_height = driver.execute_script("return document.body.scrollHeight")
     img_elements = []
-    print("Scrolling...")
+    print(f"Scrolling started from {last_height}")
+    # driver.execute_script("setInterval(()=>{ window.scrollTo(0, document.body.scrollHeight); },3000)")
     while True:
         # Scroll down to bottom
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
+        
+
         # Wait for some time to load content
-        time.sleep(random.randrange(10, 20))
+        time.sleep(random.randrange(10,20))
 
         # Calculate new scroll height and compare with last scroll height
         new_height = driver.execute_script("return document.body.scrollHeight")
-
-        img_elements = driver.find_elements(By.CSS_SELECTOR, ".GridCellLink__Link-sc-2zm517-0")
-        print(len(img_elements))
-        
+        print(f"Scrolling...from {last_height} to {new_height}")
+        img_elements = driver.find_elements(By.CSS_SELECTOR, ".GridCellLink__Link-sc-2zm517-0")        
         
         if new_height == last_height:
             # If heights are the same, it means end of page
@@ -74,7 +75,9 @@ def load_data_from_api(*args, **kwargs):
     """
     Template for loading data from API
     """
-
+    # print(kwargs['BASE_HOST_URL'])
+    url = kwargs['BASE_HOST_URL']
+    
     # minio_client = Minio(
     # "10.10.0.50:6000",
     # access_key=kwargs['s3AccessKey'],
@@ -103,7 +106,10 @@ def load_data_from_api(*args, **kwargs):
         options.add_argument(f'user-agent={user_agent}')
         
         
-        url = 'https://www.goat.com/brand/air-jordan?web_groups=sneakers'
+        
+        
+        
+
         stealth(driver,
                 languages=["en-US", "en"],
                 vendor="Google Inc.",
@@ -113,14 +119,10 @@ def load_data_from_api(*args, **kwargs):
                 fix_hairline=True,
                 )
         driver.get(url)
-
-        time.sleep(5)
-
+        
+        # time.sleep(2)
         # print(driver.page_source)
-        
-        # create_bucket(minio_client,"sst-shoe-images")
-        # # Wait for the page to load (adjust sleep time as needed)
-        
+      
 
         image_elements = scroll_webpage_until_end(driver)
 
@@ -132,10 +134,10 @@ def load_data_from_api(*args, **kwargs):
 
         image_elements = driver.find_elements(By.CSS_SELECTOR, ".GridCellLink__Link-sc-2zm517-0")
         url_array= map(lambda x: x.get_attribute("href"), image_elements)
-        print("Error",e)
+        # print("Error",e)
         
         # Create DataFrame
-        data = {'Name': url_array}
+        data = {'URLS': url_array}
         df = pd.DataFrame(data)
         return df
         
@@ -145,11 +147,10 @@ def load_data_from_api(*args, **kwargs):
     
 
 
-
+    driver.quit()
     # Create DataFrame
-    data = {'Name': url_array}
+    data = {'URLS': url_array}
     df = pd.DataFrame(data)
-    print(df)
     return df
 
 
